@@ -24,7 +24,7 @@ def json_res(data, code=200):
 def health():
     return json_res({"status": "running"})
 
-# 1. Convert Excel / CSV to Predefined Quiz HTML Format
+# 1. Convert Sheets to Specific Quiz HTML Format
 @app.route('/convert/sheet-to-html', method='POST')
 def sheet_to_html():
     try:
@@ -183,7 +183,27 @@ def images_to_pdf():
     except Exception as e:
         return json_res({"error": str(e)}, 500)
 
-# 5. PDF to DOCX
+# 5. Add Text to PDF
+@app.route('/pdf/add-text', method='POST')
+def add_text():
+    try:
+        data = request.json
+        input_path = data.get("input_path")
+        output_path = data.get("output_path")
+        text = data.get("text", "")
+        page_num = int(data.get("page_num", 1)) - 1
+
+        doc = fitz.open(input_path)
+        page = doc[page_num]
+        point = fitz.Point(72, 72)
+        page.insert_text(point, text, fontsize=14, color=(0, 0, 0))
+        doc.save(output_path)
+        doc.close()
+        return json_res({"success": True, "output": output_path})
+    except Exception as e:
+        return json_res({"error": str(e)}, 500)
+
+# 6. PDF to DOCX
 @app.route('/convert/pdf-to-docx', method='POST')
 def pdf_to_docx():
     try:
@@ -199,7 +219,7 @@ def pdf_to_docx():
     except Exception as e:
         return json_res({"error": str(e)}, 500)
 
-# 6. PDF Tables to CSV
+# 7. PDF Tables to CSV
 @app.route('/convert/pdf-to-csv', method='POST')
 def pdf_to_csv():
     try:
@@ -222,7 +242,7 @@ def pdf_to_csv():
     except Exception as e:
         return json_res({"error": str(e)}, 500)
 
-# 7. DOCX Helpers
+# 8. Read DOCX paragraphs
 @app.route('/doc/read-docx', method='POST')
 def read_docx():
     try:
@@ -232,6 +252,7 @@ def read_docx():
     except Exception as e:
         return json_res({"error": str(e)}, 500)
 
+# 9. Build DOCX from HTML
 @app.route('/doc/html-to-docx', method='POST')
 def html_to_docx():
     try:
@@ -243,7 +264,7 @@ def html_to_docx():
     except Exception as e:
         return json_res({"error": str(e)}, 500)
 
-# 8. PPTX Export
+# 10. Slide Deck to PPTX
 @app.route('/presentation/export-pptx', method='POST')
 def export_pptx():
     try:
@@ -271,6 +292,5 @@ def export_pptx():
     except Exception as e:
         return json_res({"error": str(e)}, 500)
 
-# Startup entrypoint required by serious_python
 if __name__ == '__main__':
     app.run(host='127.0.0.1', port=50050, quiet=True)
