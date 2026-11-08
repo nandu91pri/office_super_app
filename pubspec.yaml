@@ -20,6 +20,10 @@ dependencies:
   excel: ^4.0.3
   flutter_quill: ^10.8.2
   vsc_quill_delta_to_html: ^1.0.4
+  
+
+dependency_overrides:
+  intl: ^0.20.3
 
 dev_dependencies:
   flutter_test:
