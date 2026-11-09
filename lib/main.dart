@@ -1,14 +1,13 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:syncfusion_flutter_pdfviewer/pdfviewer.dart';
 import 'package:syncfusion_flutter_datagrid/datagrid.dart';
 import 'package:csv/csv.dart';
 import 'package:excel/excel.dart' as xl;
-import 'package:flutter_quill/flutter_quill.dart' hide Text;
+import 'package:flutter_quill/flutter_quill.dart';
 import 'package:vsc_quill_delta_to_html/vsc_quill_delta_to_html.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:flutter/services.dart';
 
 import 'services/file_service.dart';
 import 'services/python_bridge.dart';
@@ -43,6 +42,7 @@ class _OfficeSuperAppHomeState extends State<OfficeSuperAppHome> {
     for (int i = 0; i < 30; i++) {
       await Future.delayed(const Duration(milliseconds: 500));
       if (await PythonBridge.isReady()) {
+        if (!mounted) return;
         setState(() {
           _ready = true;
           _statusMessage = "Offline Engine Ready (Android & Windows)";
@@ -50,6 +50,7 @@ class _OfficeSuperAppHomeState extends State<OfficeSuperAppHome> {
         return;
       }
     }
+    if (!mounted) return;
     setState(() => _statusMessage = "Engine startup timed out.");
   }
 
@@ -66,6 +67,7 @@ class _OfficeSuperAppHomeState extends State<OfficeSuperAppHome> {
     if (multiple) {
       files = await FileService.pickMultipleFiles(extensions);
       if (files.length < 2) {
+        if (!mounted) return;
         setState(() => _statusMessage = "Select at least 2 files.");
         return;
       }
@@ -75,6 +77,7 @@ class _OfficeSuperAppHomeState extends State<OfficeSuperAppHome> {
       files.add(single);
     }
 
+    if (!mounted) return;
     setState(() => _statusMessage = "Executing: $title...");
     final outPath = await FileService.generateOutputPath(targetExt);
 
@@ -84,6 +87,7 @@ class _OfficeSuperAppHomeState extends State<OfficeSuperAppHome> {
 
     final result = await PythonBridge.execute(endpoint, payload);
 
+    if (!mounted) return;
     if (result != null) {
       setState(() => _statusMessage = "Done!\nSaved to: $result");
     } else {
@@ -110,7 +114,7 @@ class _OfficeSuperAppHomeState extends State<OfficeSuperAppHome> {
             },
           ),
         ],
-      ),,
+      ),
       body: ListView(
         padding: const EdgeInsets.all(16.0),
         children: [
@@ -131,14 +135,14 @@ class _OfficeSuperAppHomeState extends State<OfficeSuperAppHome> {
               style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.grey)),
           const SizedBox(height: 8),
           _buildActionCard(
-            title: "PDF Viewer & Ink Annotator",
-            subtitle: "View local PDFs, draw annotations, and save to storage",
+            title: "PDF Viewer & Highlighter",
+            subtitle: "View local PDFs, highlight text, and save to storage",
             icon: Icons.edit_document,
             btnLabel: "Open PDF",
             color: Colors.deepPurple,
             onPressed: () async {
               final file = await FileService.pickSingleFile(['pdf']);
-              if (file != null && mounted) {
+              if (file != null && context.mounted) {
                 Navigator.push(context, MaterialPageRoute(builder: (_) => InAppPdfViewer(file: file)));
               }
             },
@@ -151,7 +155,7 @@ class _OfficeSuperAppHomeState extends State<OfficeSuperAppHome> {
             color: Colors.teal,
             onPressed: () async {
               final file = await FileService.pickSingleFile(['xlsx', 'xls', 'csv']);
-              if (file != null && mounted) {
+              if (file != null && context.mounted) {
                 Navigator.push(context, MaterialPageRoute(builder: (_) => InAppSheetEditor(file: file)));
               }
             },
@@ -164,7 +168,7 @@ class _OfficeSuperAppHomeState extends State<OfficeSuperAppHome> {
             color: Colors.blueGrey,
             onPressed: () async {
               final file = await FileService.pickSingleFile(['docx', 'txt']);
-              if (mounted) {
+              if (context.mounted) {
                 Navigator.push(context, MaterialPageRoute(builder: (_) => InAppDocumentEditor(initialFile: file)));
               }
             },
@@ -241,6 +245,20 @@ class _OfficeSuperAppHomeState extends State<OfficeSuperAppHome> {
               endpoint: '/convert/pdf-to-csv',
             ),
           ),
+          const SizedBox(height: 8),
+          _buildActionCard(
+            title: "About App & User Guide",
+            subtitle: "App version, features, step-by-step guide, contact & copyright",
+            icon: Icons.info_outline,
+            btnLabel: "Open",
+            color: Colors.blueGrey,
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const InAppAboutScreen()),
+              );
+            },
+          ),
         ],
       ),
     );
@@ -259,7 +277,7 @@ class _OfficeSuperAppHomeState extends State<OfficeSuperAppHome> {
       elevation: 2,
       child: ListTile(
         leading: CircleAvatar(
-          backgroundColor: color.withOpacity(0.1),
+          backgroundColor: color.withValues(alpha: 0.1),
           child: Icon(icon, color: color),
         ),
         title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
@@ -287,7 +305,7 @@ class InAppPdfViewer extends StatefulWidget {
 
 class _InAppPdfViewerState extends State<InAppPdfViewer> {
   late PdfViewerController _controller;
-  bool _isDrawing = false;
+  bool _isHighlight = false;
 
   @override
   void initState() {
@@ -311,11 +329,12 @@ class _InAppPdfViewerState extends State<InAppPdfViewer> {
         foregroundColor: Colors.white,
         actions: [
           IconButton(
-            icon: Icon(Icons.draw, color: _isDrawing ? Colors.amberAccent : Colors.white),
+            icon: Icon(Icons.highlight, color: _isHighlight ? Colors.amberAccent : Colors.white),
             onPressed: () {
               setState(() {
-                _isDrawing = !_isDrawing;
-                _controller.annotationMode = _isDrawing ? PdfAnnotationMode.highlight : PdfAnnotationMode.none;
+                _isHighlight = !_isHighlight;
+                _controller.annotationMode =
+                    _isHighlight ? PdfAnnotationMode.highlight : PdfAnnotationMode.none;
               });
             },
           ),
@@ -366,10 +385,13 @@ class _InAppSheetEditorState extends State<InAppSheetEditor> {
           _rows = sheet.rows.skip(1).map((r) => r.map((c) => c?.value?.toString() ?? "").toList()).toList();
         }
       }
-      if (_headers.isEmpty) { _headers = ["Col A", "Col B"]; _rows = [["", ""]]; }
+      if (_headers.isEmpty) {
+        _headers = ["Col A", "Col B"];
+        _rows = [["", ""]];
+      }
       _source = _SheetSource(_headers, _rows);
     } catch (_) {}
-    setState(() => _loading = false);
+    if (mounted) setState(() => _loading = false);
   }
 
   Future<void> _save() async {
@@ -440,11 +462,16 @@ class _SheetSource extends DataGridSource {
   List<DataGridRow> _gridRows = [];
   dynamic newVal;
 
-  _SheetSource(this.headers, this.sheetRows) { buildRows(); }
+  _SheetSource(this.headers, this.sheetRows) {
+    buildRows();
+  }
 
   void buildRows() {
     _gridRows = sheetRows.map((r) => DataGridRow(
-      cells: List.generate(headers.length, (i) => DataGridCell(columnName: 'col_$i', value: i < r.length ? r[i].toString() : '')),
+      cells: List.generate(
+        headers.length,
+        (i) => DataGridCell(columnName: 'col_$i', value: i < r.length ? r[i].toString() : ''),
+      ),
     )).toList();
     notifyListeners();
   }
@@ -455,7 +482,11 @@ class _SheetSource extends DataGridSource {
   @override
   DataGridRowAdapter buildRow(DataGridRow row) {
     return DataGridRowAdapter(
-      cells: row.getCells().map((c) => Container(alignment: Alignment.centerLeft, padding: const EdgeInsets.all(8), child: Text(c.value.toString()))).toList(),
+      cells: row.getCells().map((c) => Container(
+        alignment: Alignment.centerLeft,
+        padding: const EdgeInsets.all(8),
+        child: Text(c.value.toString()),
+      )).toList(),
     );
   }
 
@@ -463,7 +494,10 @@ class _SheetSource extends DataGridSource {
   Future<void> onCellSubmit(DataGridRow row, RowColumnIndex rIndex, GridColumn col) async {
     final int rowIdx = _gridRows.indexOf(row);
     final int colIdx = int.parse(col.columnName.replaceFirst('col_', ''));
-    if (newVal != null) { sheetRows[rowIdx][colIdx] = newVal; buildRows(); }
+    if (newVal != null) {
+      sheetRows[rowIdx][colIdx] = newVal;
+      buildRows();
+    }
   }
 
   @override
@@ -499,7 +533,10 @@ class _InAppDocumentEditorState extends State<InAppDocumentEditor> {
   }
 
   Future<void> _load() async {
-    if (widget.initialFile == null) { setState(() => _loading = false); return; }
+    if (widget.initialFile == null) {
+      setState(() => _loading = false);
+      return;
+    }
     try {
       final path = widget.initialFile!.path;
       if (path.endsWith('.txt')) {
@@ -511,7 +548,7 @@ class _InAppDocumentEditorState extends State<InAppDocumentEditor> {
         }
       }
     } catch (_) {}
-    setState(() => _loading = false);
+    if (mounted) setState(() => _loading = false);
   }
 
   Future<void> _export(String ext) async {
@@ -520,9 +557,7 @@ class _InAppDocumentEditorState extends State<InAppDocumentEditor> {
       await File(out).writeAsString(_controller.document.toPlainText());
     } else {
       final html = QuillDeltaToHtmlConverter(
-        List<Map<String, dynamic>>.from(
-          _controller.document.toDelta().toJson(),
-        ),
+        List>.from(_controller.document.toDelta().toJson()),
       ).convert();
       await PythonBridge.execute('/doc/html-to-docx', {"html": html, "output_path": out});
     }
@@ -543,8 +578,20 @@ class _InAppDocumentEditorState extends State<InAppDocumentEditor> {
               context: context,
               builder: (ctx) => Wrap(
                 children: [
-                  ListTile(title: const Text("Export as .docx"), onTap: () { Navigator.pop(ctx); _export("docx"); }),
-                  ListTile(title: const Text("Export as .txt"), onTap: () { Navigator.pop(ctx); _export("txt"); }),
+                  ListTile(
+                    title: const Text("Export as .docx"),
+                    onTap: () {
+                      Navigator.pop(ctx);
+                      _export("docx");
+                    },
+                  ),
+                  ListTile(
+                    title: const Text("Export as .txt"),
+                    onTap: () {
+                      Navigator.pop(ctx);
+                      _export("txt");
+                    },
+                  ),
                 ],
               ),
             ),
@@ -555,13 +602,19 @@ class _InAppDocumentEditorState extends State<InAppDocumentEditor> {
           ? const Center(child: CircularProgressIndicator())
           : Column(
               children: [
-                QuillSimpleToolbar(controller: _controller, configurations: const QuillSimpleToolbarConfigurations()),
+                QuillSimpleToolbar(
+                  controller: _controller,
+                  configurations: const QuillSimpleToolbarConfigurations(),
+                ),
                 const Divider(height: 1),
                 Expanded(
                   child: Container(
                     padding: const EdgeInsets.all(16),
                     color: Colors.white,
-                    child: QuillEditor.basic(controller: _controller, configurations: const QuillEditorConfigurations()),
+                    child: QuillEditor.basic(
+                      controller: _controller,
+                      configurations: const QuillEditorConfigurations(),
+                    ),
                   ),
                 ),
               ],
@@ -579,7 +632,7 @@ class InAppSlideEditor extends StatefulWidget {
 }
 
 class _InAppSlideEditorState extends State<InAppSlideEditor> {
-  final List<Map<String, dynamic>> _slides = [
+  final List> _slides = [
     {
       "elements": [
         {"text": "Presentation Title", "x": 0.15, "y": 0.25, "width": 0.7, "height": 0.2, "fontSize": 34.0, "color": "#1A237E"},
@@ -595,13 +648,16 @@ class _InAppSlideEditorState extends State<InAppSlideEditor> {
       "slides": _slides,
       "output_path": out,
     });
-    if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(res != null ? "Saved: $out" : "Export failed")));
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(res != null ? "Saved: $out" : "Export failed")),
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    final List<Map<String, dynamic>> elements =
-        List<Map<String, dynamic>>.from(_slides[_idx]["elements"]);
+    final List elements = _slides[_idx]["elements"];
     return Scaffold(
       appBar: AppBar(
         title: const Text("Presentation Deck Editor"),
@@ -611,7 +667,13 @@ class _InAppSlideEditorState extends State<InAppSlideEditor> {
           IconButton(
             icon: const Icon(Icons.add_box),
             onPressed: () => setState(() => elements.add({
-              "text": "New Text Box", "x": 0.2, "y": 0.3, "width": 0.5, "height": 0.15, "fontSize": 22.0, "color": "#000000"
+              "text": "New Text Box",
+              "x": 0.2,
+              "y": 0.3,
+              "width": 0.5,
+              "height": 0.15,
+              "fontSize": 22.0,
+              "color": "#000000"
             })),
           ),
           IconButton(icon: const Icon(Icons.download), onPressed: _export),
@@ -661,7 +723,13 @@ class _InAppSlideEditorState extends State<InAppSlideEditor> {
                                   builder: (d) => AlertDialog(
                                     content: TextField(controller: c),
                                     actions: [
-                                      TextButton(onPressed: () { setState(() => el["text"] = c.text); Navigator.pop(d); }, child: const Text("Save"))
+                                      TextButton(
+                                        onPressed: () {
+                                          setState(() => el["text"] = c.text);
+                                          Navigator.pop(d);
+                                        },
+                                        child: const Text("Save"),
+                                      )
                                     ],
                                   ),
                                 );
@@ -718,12 +786,16 @@ class _InAppPdfMergeScreenState extends State<InAppPdfMergeScreen> {
 
   Future<void> _merge() async {
     if (_selectedFiles.length < 2) return;
-    setState(() { _isProcessing = true; _status = "Merging documents..."; });
+    setState(() {
+      _isProcessing = true;
+      _status = "Merging documents...";
+    });
     final out = await FileService.generateOutputPath('pdf');
     final res = await PythonBridge.execute('/pdf/merge', {
       "file_paths": _selectedFiles.map((f) => f.path).toList(),
       "output_path": out,
     });
+    if (!mounted) return;
     setState(() {
       _isProcessing = false;
       _status = res != null ? "Saved to: $out" : "Merge failed";
@@ -741,17 +813,26 @@ class _InAppPdfMergeScreenState extends State<InAppPdfMergeScreen> {
             child: Row(
               children: [
                 Expanded(child: Text("${_selectedFiles.length} files selected (drag handle to reorder)")),
-                ElevatedButton.icon(onPressed: _isProcessing ? null : _pickFiles, icon: const Icon(Icons.add), label: const Text('Add PDFs')),
+                ElevatedButton.icon(
+                  onPressed: _isProcessing ? null : _pickFiles,
+                  icon: const Icon(Icons.add),
+                  label: const Text('Add PDFs'),
+                ),
               ],
             ),
           ),
-          if (_status != null) Container(width: double.infinity, padding: const EdgeInsets.all(8), color: Colors.indigo.shade50, child: Text(_status!, textAlign: TextAlign.center)),
+          if (_status != null)
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(8),
+              color: Colors.indigo.shade50,
+              child: Text(_status!, textAlign: TextAlign.center),
+            ),
           Expanded(
             child: ReorderableListView.builder(
               itemCount: _selectedFiles.length,
-              onReorder: (oldIdx, newIdx) {
+              onReorderItem: (oldIdx, newIdx) {
                 setState(() {
-                  if (oldIdx < newIdx) newIdx -= 1;
                   final item = _selectedFiles.removeAt(oldIdx);
                   _selectedFiles.insert(newIdx, item);
                 });
@@ -763,7 +844,10 @@ class _InAppPdfMergeScreenState extends State<InAppPdfMergeScreen> {
                 trailing: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    IconButton(icon: const Icon(Icons.delete, color: Colors.red), onPressed: () => setState(() => _selectedFiles.removeAt(i))),
+                    IconButton(
+                      icon: const Icon(Icons.delete, color: Colors.red),
+                      onPressed: () => setState(() => _selectedFiles.removeAt(i)),
+                    ),
                     const Icon(Icons.drag_handle),
                   ],
                 ),
@@ -788,6 +872,7 @@ class _InAppPdfMergeScreenState extends State<InAppPdfMergeScreen> {
     );
   }
 }
+
 // 6. About App & User Guide Screen
 class InAppAboutScreen extends StatelessWidget {
   const InAppAboutScreen({super.key});
@@ -813,7 +898,6 @@ class InAppAboutScreen extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.all(16.0),
         children: [
-          // 1. App Name & Version
           Card(
             elevation: 2,
             color: Colors.indigo.shade50,
@@ -868,10 +952,7 @@ class InAppAboutScreen extends StatelessWidget {
               ),
             ),
           ),
-
           const SizedBox(height: 20),
-
-          // 2. App Features
           const Text(
             'FEATURES OF THIS APP',
             style: TextStyle(
@@ -954,10 +1035,7 @@ class InAppAboutScreen extends StatelessWidget {
               ),
             ),
           ),
-
           const SizedBox(height: 20),
-
-          // 3. How to Use (Layman Language)
           const Text(
             'HOW TO USE (SIMPLE GUIDE)',
             style: TextStyle(
@@ -1030,10 +1108,7 @@ class InAppAboutScreen extends StatelessWidget {
               ),
             ),
           ),
-
           const SizedBox(height: 20),
-
-          // 4. Owner & Contact Details
           const Text(
             'OWNER & CONTACT DETAILS',
             style: TextStyle(
@@ -1081,10 +1156,7 @@ class InAppAboutScreen extends StatelessWidget {
               ],
             ),
           ),
-
           const SizedBox(height: 24),
-
-          // 5. Copyrights
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
