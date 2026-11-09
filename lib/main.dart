@@ -8,6 +8,7 @@ import 'package:excel/excel.dart' as xl;
 import 'package:flutter_quill/flutter_quill.dart' hide Text;
 import 'package:vsc_quill_delta_to_html/vsc_quill_delta_to_html.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:flutter/services.dart';
 
 import 'services/file_service.dart';
 import 'services/python_bridge.dart';
@@ -97,7 +98,19 @@ class _OfficeSuperAppHomeState extends State<OfficeSuperAppHome> {
         title: const Text('Offline Office SuperApp'),
         backgroundColor: Colors.indigo,
         foregroundColor: Colors.white,
-      ),
+        actions: [
+          IconButton(
+            tooltip: 'About & User Guide',
+            icon: const Icon(Icons.info_outline),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const InAppAboutScreen()),
+              );
+            },
+          ),
+        ],
+      ),,
       body: ListView(
         padding: const EdgeInsets.all(16.0),
         children: [
@@ -772,6 +785,393 @@ class _InAppPdfMergeScreenState extends State<InAppPdfMergeScreen> {
           )
         ],
       ),
+    );
+  }
+}
+// 6. About App & User Guide Screen
+class InAppAboutScreen extends StatelessWidget {
+  const InAppAboutScreen({super.key});
+
+  void _copyEmail(BuildContext context) {
+    Clipboard.setData(const ClipboardData(text: 'nandani871991@gmail.com'));
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Email copied: nandani871991@gmail.com'),
+        duration: Duration(seconds: 2),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('About & User Guide'),
+        backgroundColor: Colors.indigo,
+        foregroundColor: Colors.white,
+      ),
+      body: ListView(
+        padding: const EdgeInsets.all(16.0),
+        children: [
+          // 1. App Name & Version
+          Card(
+            elevation: 2,
+            color: Colors.indigo.shade50,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
+              child: Column(
+                children: [
+                  const CircleAvatar(
+                    radius: 34,
+                    backgroundColor: Colors.indigo,
+                    child: Icon(
+                      Icons.workspaces_filled,
+                      size: 36,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  const Text(
+                    'Offline Office SuperApp',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.indigo,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: Colors.indigo.shade100,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      'Version 1.0.0',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        color: Colors.indigo.shade900,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  const Text(
+                    'An all-in-one offline workspace to view, edit, and convert PDFs, Spreadsheets, Documents, and Presentations on Android and Windows.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 13.5, color: Colors.black87),
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 20),
+
+          // 2. App Features
+          const Text(
+            'FEATURES OF THIS APP',
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.bold,
+              color: Colors.indigo,
+              letterSpacing: 0.8,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Card(
+            elevation: 1.5,
+            child: Padding(
+              padding: const EdgeInsets.all(14.0),
+              child: Column(
+                children: [
+                  _buildFeatureRow(
+                    Icons.picture_as_pdf,
+                    Colors.deepPurple,
+                    'PDF Viewer & Highlighter',
+                    'Open any PDF from your device, highlight important text, and save a new copy.',
+                  ),
+                  const Divider(height: 18),
+                  _buildFeatureRow(
+                    Icons.merge_type,
+                    Colors.indigo,
+                    'PDF Merger',
+                    'Select two or more PDFs, drag them into your preferred order, and combine them into one file.',
+                  ),
+                  const Divider(height: 18),
+                  _buildFeatureRow(
+                    Icons.image,
+                    Colors.blue,
+                    'Photos to PDF',
+                    'Pick images (JPG or PNG) from your phone or computer and turn them into a single PDF.',
+                  ),
+                  const Divider(height: 18),
+                  _buildFeatureRow(
+                    Icons.transform,
+                    Colors.indigo.shade700,
+                    'PDF to Word & CSV Converter',
+                    'Turn PDFs into editable Word (.docx) documents, or pull tables out of PDFs into CSV files.',
+                  ),
+                  const Divider(height: 18),
+                  _buildFeatureRow(
+                    Icons.table_chart,
+                    Colors.teal,
+                    'Spreadsheet Editor (.xlsx / .csv)',
+                    'Open Excel or CSV sheets, edit values directly, add new rows, and save your updates.',
+                  ),
+                  const Divider(height: 18),
+                  _buildFeatureRow(
+                    Icons.quiz,
+                    Colors.green.shade700,
+                    'Sheet to Quiz HTML Converter',
+                    'Automatically turn Excel or CSV question sheets into ready-to-use Quiz HTML code.',
+                  ),
+                  const Divider(height: 18),
+                  _buildFeatureRow(
+                    Icons.edit_note,
+                    Colors.blueGrey,
+                    'Document Editor (.docx / .txt)',
+                    'Write or edit text and Word documents with bold styling, headings, lists, and easy export.',
+                  ),
+                  const Divider(height: 18),
+                  _buildFeatureRow(
+                    Icons.slideshow,
+                    Colors.deepOrange,
+                    'Presentation Deck Editor (.pptx)',
+                    'Create slides, double-tap to edit text, drag text boxes anywhere, and save as a PowerPoint (.pptx) file.',
+                  ),
+                  const Divider(height: 18),
+                  _buildFeatureRow(
+                    Icons.wifi_off,
+                    Colors.green,
+                    'Works 100% Offline',
+                    'All tools run directly on your device—no internet connection is needed.',
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 20),
+
+          // 3. How to Use (Layman Language)
+          const Text(
+            'HOW TO USE (SIMPLE GUIDE)',
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.bold,
+              color: Colors.indigo,
+              letterSpacing: 0.8,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Card(
+            elevation: 1.5,
+            child: Padding(
+              padding: const EdgeInsets.all(14.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildStepRow(
+                    '1',
+                    'Wait for the Green Status Box',
+                    'After opening the app, wait a few seconds until the top box turns green and says "Offline Engine Ready".',
+                  ),
+                  const SizedBox(height: 12),
+                  _buildStepRow(
+                    '2',
+                    'Pick a Tool',
+                    'Scroll through the home screen and tap the button next to the task you want (such as Open PDF, Open Sheet, Merge Tool, or Convert).',
+                  ),
+                  const SizedBox(height: 12),
+                  _buildStepRow(
+                    '3',
+                    'Select Your File(s)',
+                    'Choose the file you want to work on from your phone or computer storage.',
+                  ),
+                  const SizedBox(height: 12),
+                  _buildStepRow(
+                    '4',
+                    'Edit or Convert & Save',
+                    'Inside any editor, make your changes and tap the Save icon at the top right. Converters process your file automatically.',
+                  ),
+                  const SizedBox(height: 12),
+                  _buildStepRow(
+                    '5',
+                    'Find Your Saved File',
+                    'When the job finishes, an on-screen message will show the exact folder path on your device where your new file is saved.',
+                  ),
+                  const Divider(height: 22),
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: Colors.amber.shade50,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.amber.shade300),
+                    ),
+                    child: const Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Icon(Icons.lightbulb_outline, color: Colors.amber, size: 20),
+                        SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            'Tip for Quiz HTML Converter: Keep columns in your Excel or CSV file for Question Number, Question, Option A, Option B, Option C, Option D, Correct Option (A/B/C/D), and Explanation.',
+                            style: TextStyle(fontSize: 12.5, color: Colors.black87),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 20),
+
+          // 4. Owner & Contact Details
+          const Text(
+            'OWNER & CONTACT DETAILS',
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.bold,
+              color: Colors.indigo,
+              letterSpacing: 0.8,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Card(
+            elevation: 1.5,
+            child: Column(
+              children: [
+                const ListTile(
+                  leading: Icon(Icons.person, color: Colors.indigo),
+                  title: Text('App Owner', style: TextStyle(fontSize: 13, color: Colors.grey)),
+                  subtitle: Text(
+                    'Nandani Kumari',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.black87,
+                    ),
+                  ),
+                ),
+                const Divider(height: 1),
+                ListTile(
+                  leading: const Icon(Icons.email, color: Colors.indigo),
+                  title: const Text('Email ID', style: TextStyle(fontSize: 13, color: Colors.grey)),
+                  subtitle: const SelectableText(
+                    'nandani871991@gmail.com',
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.indigo,
+                    ),
+                  ),
+                  trailing: IconButton(
+                    tooltip: 'Copy Email',
+                    icon: const Icon(Icons.copy, size: 20),
+                    onPressed: () => _copyEmail(context),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 24),
+
+          // 5. Copyrights
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.grey.shade100,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: Colors.grey.shade300),
+            ),
+            child: const Column(
+              children: [
+                Icon(Icons.copyright, color: Colors.black54, size: 22),
+                SizedBox(height: 6),
+                Text(
+                  '© 2026 Nandani Kumari. All Rights Reserved.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                    color: Colors.black87,
+                  ),
+                ),
+                SizedBox(height: 4),
+                Text(
+                  'Offline Office SuperApp is owned and copyrighted by Nandani Kumari. Unauthorized copying or commercial redistribution without permission is prohibited.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 12, color: Colors.black54),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 20),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFeatureRow(IconData icon, Color color, String title, String desc) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        CircleAvatar(
+          radius: 16,
+          backgroundColor: Colors.grey.shade100,
+          child: Icon(icon, size: 18, color: color),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+              const SizedBox(height: 2),
+              Text(desc, style: const TextStyle(fontSize: 13, color: Colors.black87)),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildStepRow(String stepNum, String title, String desc) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        CircleAvatar(
+          radius: 13,
+          backgroundColor: Colors.indigo,
+          child: Text(
+            stepNum,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+              const SizedBox(height: 2),
+              Text(desc, style: const TextStyle(fontSize: 13, color: Colors.black87)),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }
