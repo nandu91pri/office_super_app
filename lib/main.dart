@@ -302,7 +302,7 @@ class _InAppPdfViewerState extends State<InAppPdfViewer> {
             onPressed: () {
               setState(() {
                 _isDrawing = !_isDrawing;
-                _controller.annotationMode = _isDrawing ? PdfAnnotationMode.ink : PdfAnnotationMode.none;
+                _controller.annotationMode = _isDrawing ? PdfAnnotationMode.highlight : PdfAnnotationMode.none;
               });
             },
           ),
@@ -423,21 +423,21 @@ class _InAppSheetEditorState extends State<InAppSheetEditor> {
 
 class _SheetSource extends DataGridSource {
   final List<String> headers;
-  final List<List<dynamic>> rows;
+  final List<List<dynamic>> sheetRows;
   List<DataGridRow> _gridRows = [];
   dynamic newVal;
 
-  _SheetSource(this.headers, this.rows) { buildRows(); }
+  _SheetSource(this.headers, this.sheetRows) { buildRows(); }
 
   void buildRows() {
-    _gridRows = rows.map((r) => DataGridRow(
+    _gridRows = sheetRows.map((r) => DataGridRow(
       cells: List.generate(headers.length, (i) => DataGridCell(columnName: 'col_$i', value: i < r.length ? r[i].toString() : '')),
     )).toList();
     notifyListeners();
   }
 
   @override
-  List<DataGridRow> get rowsData => _gridRows;
+  List<DataGridRow> get rows => _gridRows;
 
   @override
   DataGridRowAdapter buildRow(DataGridRow row) {
@@ -450,7 +450,7 @@ class _SheetSource extends DataGridSource {
   Future<void> onCellSubmit(DataGridRow row, RowColumnIndex rIndex, GridColumn col) async {
     final int rowIdx = _gridRows.indexOf(row);
     final int colIdx = int.parse(col.columnName.replaceFirst('col_', ''));
-    if (newVal != null) { rows[rowIdx][colIdx] = newVal; buildRows(); }
+    if (newVal != null) { sheetRows[rowIdx][colIdx] = newVal; buildRows(); }
   }
 
   @override
