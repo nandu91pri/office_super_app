@@ -506,7 +506,11 @@ class _InAppDocumentEditorState extends State<InAppDocumentEditor> {
     if (ext == "txt") {
       await File(out).writeAsString(_controller.document.toPlainText());
     } else {
-      final html = QuillDeltaToHtmlConverter(List>.from(_controller.document.toDelta().toJson())).convert();
+      final html = QuillDeltaToHtmlConverter(
+        List<Map<String, dynamic>>.from(
+          _controller.document.toDelta().toJson(),
+        ),
+      ).convert();
       await PythonBridge.execute('/doc/html-to-docx', {"html": html, "output_path": out});
     }
     if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Saved: $out')));
@@ -562,7 +566,7 @@ class InAppSlideEditor extends StatefulWidget {
 }
 
 class _InAppSlideEditorState extends State<InAppSlideEditor> {
-  final List> _slides = [
+  final List<Map<String, dynamic>> _slides = [
     {
       "elements": [
         {"text": "Presentation Title", "x": 0.15, "y": 0.25, "width": 0.7, "height": 0.2, "fontSize": 34.0, "color": "#1A237E"},
@@ -583,7 +587,8 @@ class _InAppSlideEditorState extends State<InAppSlideEditor> {
 
   @override
   Widget build(BuildContext context) {
-    final List elements = _slides[_idx]["elements"];
+    final List<Map<String, dynamic>> elements =
+        List<Map<String, dynamic>>.from(_slides[_idx]["elements"]);
     return Scaffold(
       appBar: AppBar(
         title: const Text("Presentation Deck Editor"),
