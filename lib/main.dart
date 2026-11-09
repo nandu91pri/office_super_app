@@ -1,4 +1,4 @@
-import 'dart:convert';
+﻿import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -557,7 +557,7 @@ class _InAppDocumentEditorState extends State<InAppDocumentEditor> {
       await File(out).writeAsString(_controller.document.toPlainText());
     } else {
       final html = QuillDeltaToHtmlConverter(
-        List>.from(_controller.document.toDelta().toJson()),
+        List<Map<String, dynamic>>.from(_controller.document.toDelta().toJson()),
       ).convert();
       await PythonBridge.execute('/doc/html-to-docx', {"html": html, "output_path": out});
     }
@@ -632,11 +632,11 @@ class InAppSlideEditor extends StatefulWidget {
 }
 
 class _InAppSlideEditorState extends State<InAppSlideEditor> {
-  final List> _slides = [
+  final List<Map<String, dynamic>> _slides = [
     {
       "elements": [
         {"text": "Presentation Title", "x": 0.15, "y": 0.25, "width": 0.7, "height": 0.2, "fontSize": 34.0, "color": "#1A237E"},
-        {"text": "Double tap to edit • Drag to position", "x": 0.15, "y": 0.5, "width": 0.7, "height": 0.15, "fontSize": 18.0, "color": "#000000"},
+        {"text": "Double tap to edit â€¢ Drag to position", "x": 0.15, "y": 0.5, "width": 0.7, "height": 0.15, "fontSize": 18.0, "color": "#000000"},
       ]
     }
   ];
@@ -1029,7 +1029,7 @@ class InAppAboutScreen extends StatelessWidget {
                     Icons.wifi_off,
                     Colors.green,
                     'Works 100% Offline',
-                    'All tools run directly on your device—no internet connection is needed.',
+                    'All tools run directly on your deviceâ€”no internet connection is needed.',
                   ),
                 ],
               ),
@@ -1169,7 +1169,7 @@ class InAppAboutScreen extends StatelessWidget {
                 Icon(Icons.copyright, color: Colors.black54, size: 22),
                 SizedBox(height: 6),
                 Text(
-                  '© 2026 Nandani Kumari. All Rights Reserved.',
+                  'Â© 2026 Nandani Kumari. All Rights Reserved.',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
@@ -1247,3 +1247,5 @@ class InAppAboutScreen extends StatelessWidget {
     );
   }
 }
+
+
