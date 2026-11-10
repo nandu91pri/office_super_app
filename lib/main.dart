@@ -604,7 +604,7 @@ class _InAppDocumentEditorState extends State<InAppDocumentEditor> {
               children: [
                 QuillSimpleToolbar(
                   controller: _controller,
-                  configurations: const QuillSimpleToolbarConfigurations(),
+                  
                 ),
                 const Divider(height: 1),
                 Expanded(
@@ -613,7 +613,8 @@ class _InAppDocumentEditorState extends State<InAppDocumentEditor> {
                     color: Colors.white,
                     child: QuillEditor.basic(
                       controller: _controller,
-                      configurations: const QuillEditorConfigurations(),
+                      
+                      
                     ),
                   ),
                 ),
@@ -1247,5 +1248,6 @@ class InAppAboutScreen extends StatelessWidget {
     );
   }
 }
+
 
 

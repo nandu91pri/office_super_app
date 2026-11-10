@@ -13,17 +13,14 @@ dependencies:
   path_provider: ^2.1.2
   http: ^1.2.0
   serious_python: ^0.8.0
-  syncfusion_flutter_pdfviewer: ^26.1.41
-  syncfusion_flutter_datagrid: ^26.1.41
-  syncfusion_flutter_core: ^26.1.41
+  syncfusion_flutter_pdfviewer: ">=28.2.7 <35.0.0"
+  syncfusion_flutter_datagrid: ">=28.2.7 <35.0.0"
+  syncfusion_flutter_core: ">=28.2.7 <35.0.0"
   csv: ^6.0.0
   excel: ^4.0.3
-  flutter_quill: ^10.8.2
   vsc_quill_delta_to_html: ^1.0.4
+  flutter_quill: 11.6.0
   
-
-dependency_overrides:
-  intl: ^0.20.3
 
 dev_dependencies:
   flutter_test:
